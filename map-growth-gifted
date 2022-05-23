@@ -1,0 +1,54 @@
+WITH
+  mathematics AS (
+  SELECT
+    StudentID,
+    MAX(TestPercentile) AS percentile
+  FROM
+    `gifted-data-import-2021.gifted.spring-map-results`
+  WHERE
+    Subject = 'Mathematics'
+  GROUP BY
+    StudentID),
+  ela AS (
+  SELECT
+    StudentID,
+    MAX(TestPercentile) AS percentile
+  FROM
+    `gifted-data-import-2021.gifted.spring-map-results`
+  WHERE
+    Subject = 'Language Arts'
+  GROUP BY
+    StudentID)
+SELECT
+  roster.StudentLastName,
+  roster.StudentFirstName,
+  roster.StudentID,
+  roster.Grade,
+  roster.SchoolName,
+  mathematics.percentile AS math_percentile,
+  CASE
+    WHEN mathematics.percentile >= 95 THEN 'Identified'
+    ELSE 'Not Identified'
+  END AS math_status,
+  ela.percentile AS ela_percentile,
+  CASE
+    WHEN ela.percentile >= 95 THEN 'Identified'
+    ELSE 'Not Identified'
+  END AS ela_status,
+  CASE
+    WHEN mathematics.percentile >= 95 THEN 'Identified'
+    WHEN ela.percentile >= 95 THEN 'Identified'
+    ELSE 'Not Identified'
+  END AS id_status
+FROM
+  `gifted-data-import-2021.gifted.map-roster` AS roster
+INNER JOIN
+  mathematics
+ON
+  roster.StudentID = mathematics.StudentID
+INNER JOIN
+  ela
+ON
+  roster.StudentID = ela.StudentID
+WHERE roster.Grade IN('2','3','4','5','6','7','8','9','10')
+ORDER BY id_status ASC
